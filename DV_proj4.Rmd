@@ -54,4 +54,21 @@ renderPlot({
 attach(grouped)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## dplyr Stuff
+
+Looking into most successful agents and teams
+topics coverered - piplines. select, mutate , group_by, summarize, arrange
+```{r echo = FALSE}
+data_SA = data %>% dplyr::select(agent_key, agent_name, calls_with_accept, calls, team_lead_id) %>% dplyr::mutate(call_acceptance_rate = calls_with_accept / calls) %>% dplyr::group_by(agent_key, agent_name,team_lead_id) %>% dplyr::summarize(avg_calls_with_a = mean(calls_with_accept), avg_calls = mean(calls), avg_call_acceptance_rate = mean(call_acceptance_rate))
+
+data_SA_sort = data_SA %>% dplyr::arrange(desc(avg_call_acceptance_rate))
+
+data_SA_sort = data_SA %>% dplyr::arrange(avg_call_acceptance_rate)
+
+teams = data_SA %>% dplyr::select(team_lead_id, avg_calls, avg_call_acceptance_rate) %>% dplyr::group_by(team_lead_id) %>% dplyr::summarize(mean(avg_calls), mean(avg_call_acceptance_rate))
+
+renderPlot({
+  ggplot(data = teams, aes(x=`mean(avg_calls)`, y = `mean(avg_call_acceptance_rate)`)) + geom_line()
+})
+
+```
