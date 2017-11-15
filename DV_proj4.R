@@ -1,5 +1,6 @@
 library(readr)
 library(tidyr)
+require(data.world)
 
 # 1. read csv
 call_data	=	read_csv("/Users/amandale/Downloads/Call_Data.csv", col_types = cols(
@@ -44,7 +45,8 @@ FROM call_data join hierarchy on call_data.agent_key = hierarchy.agent_key"),
   dataset = project
   )
 
-#3. gather - idk what to do here lol 
+#3. gather - idk what to do here lol
+by_agent <- data %>% dplyr::group_by(agent_key) %>% View()
 data1 <- tidyr::gather(data, key="key", value = "cases", na.rm = TRUE)
 
 #4. dpylr 

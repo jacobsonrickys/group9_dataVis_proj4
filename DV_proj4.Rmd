@@ -1,0 +1,57 @@
+---
+title: "DV_proj4"
+author: "Group 9"
+date: "11/15/2017"
+resource_files:
+- .Renviron
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+runtime: shiny
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+require(data.world)
+require(MASS)
+require(ISLR)
+require(dplyr)
+require(ggplot2)
+```
+
+## Non SELECT * SQL
+
+Import the data from data.world, where the bulk of the work is done on the back end.
+
+```{r}
+project <- "https://data.world/rc38246/f-17-edv-project-4/"
+data.world::set_config(cfg_env("DW_API"))
+data <- data.world::query(
+  data.world::qry_sql("SELECT call_data.agent_key, call_data.calls, call_data.handle_time, call_data.call_regen, call_data.calls_with_offer,
+call_data.calls_with_accept, call_data.calls_offer_applied, call_data.transfers, hierarchy.agent_name, hierarchy.team_lead_id, hierarchy.team_lead_name, hierarchy.call_center
+FROM call_data join hierarchy on call_data.agent_key = hierarchy.agent_key"),
+  dataset = project
+  )
+attach(data)
+```
+
+## Gathering Data
+
+Here, we grouped the data by agent (agent_key) and plotted the number of calls where the offer was given, the number of calls where the offer was accepted, and the number of calls where the offer was applied. To do this, we needed to reformat the data using the gather tool. In looking at the results, we see a rather consistent gap between the lines. This suggests that the number of clients who received the offer but did not accept remained about the same from agent to agent. Likewise, the number of clients who accepted the offer but did not apply it remained about the same amongst the agents as well.
+
+```{r echo=FALSE}
+grouped <- data %>% dplyr::group_by(agent_key) %>% summarise(sum_with_offer = sum(calls_with_offer), sum_with_accept = sum(calls_with_accept), sum_offer_applied = sum(calls_offer_applied)) 
+
+gathered <- grouped %>% tidyr::gather(variable,value, -agent_key)
+
+renderPlot({
+  gathered %>% ggplot(aes(x = agent_key, y = value, color = variable)) + geom_smooth(se = FALSE)
+})
+
+attach(grouped)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
